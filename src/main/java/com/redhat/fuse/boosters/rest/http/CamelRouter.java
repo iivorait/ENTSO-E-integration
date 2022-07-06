@@ -53,22 +53,31 @@ public class CamelRouter extends RouteBuilder {
         		.to("direct:callAPI")
         		;
 
-        //hystrix tähän?
 	    from("direct:callAPI")
 	    	.routeId("callAPI")
 	    	.removeHeader(Exchange.HTTP_URI) //These headers are shared with the REST component and will interfere with HTTP4
 	    	.removeHeader(Exchange.HTTP_PATH)
 	    	.removeHeader(Exchange.HTTP_QUERY)
-	    	.toD("https4://{{entsoe.endpoint}}?securityToken={{entsoe.securityToken}}&documentType=A44&in_Domain=${headers.areacode}&out_Domain=${headers.areacode}&periodStart=${date-with-timezone:now:UTC:yyyyMMddHH}00&periodEnd=${date-with-timezone:now:UTC:yyyyMMddHH}00")
-	    	.setProperty("responseXML", simple("${bodyAs(String)}")) //Allow the body to be read multiple times
-	    	.setBody(simple("${property.responseXML}"))
-//	    	.log("API response: ${body}")
-	    	.to("direct:parseXML")
+	    	.hystrix()
+	    		.hystrixConfiguration()
+	    			.executionTimeoutInMilliseconds(30000)
+	    			.circuitBreakerRequestVolumeThreshold(10)
+	    			.metricsRollingPercentileWindowInMilliseconds(60000)
+	    			.circuitBreakerSleepWindowInMilliseconds(60000)
+	    		.end()
+	    		.toD("https4://{{entsoe.endpoint}}?securityToken={{entsoe.securityToken}}&documentType=A44&in_Domain=${headers.areacode}&out_Domain=${headers.areacode}&periodStart=${date-with-timezone:now:UTC:yyyyMMddHH}00&periodEnd=${date-with-timezone:now:UTC:yyyyMMddHH}00")
+	    		.setProperty("responseXML", simple("${bodyAs(String)}")) //Allow the body to be read multiple times
+		    	.setBody(simple("${property.responseXML}"))
+//		    	.log("API response: ${body}")
+		    	.to("direct:parseXML")
+	    	.onFallback()
+	    		.transform().constant("Error with ENTSO-E API")
+	    	.end()
 	        ;  
 	    
 	    
 	    JAXBContext con = JAXBContext.newInstance(Publication_MarketDocument.class);
-        JaxbDataFormat jaxbDataFormat = new JaxbDataFormat(con);
+	    JaxbDataFormat jaxbDataFormat = new JaxbDataFormat(con);
 	    from("direct:parseXML")
 	    	.routeId("parseXML")
 //		    .log("Before ${body}") 
