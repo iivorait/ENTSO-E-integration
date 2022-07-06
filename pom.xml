@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.yourcompany.newapp</groupId>
-  <artifactId>fingrid2</artifactId>
+  <groupId>com.github.iivorait.entso-e-integration</groupId>
+  <artifactId>entso-e-integration</artifactId>
   <version>1.0.0</version>
-  <name>Fuse :: Boosters :: Rest HTTP</name>
+  <name>ENTSO-E integration</name>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>

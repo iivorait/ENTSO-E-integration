@@ -14,6 +14,6 @@ RUN mvn -f /home/app/pom.xml clean package -DskipTests
 FROM ibm-semeru-runtimes:open-11-jdk-focal
 
 RUN mkdir /opt/app
-COPY --from=build /home/app/target/fingrid2-1.0.0.jar /opt/app
+COPY --from=build /home/app/target/entso-e-integration-1.0.0.jar /opt/app
 
-CMD ["java", "-jar", "/opt/app/fingrid2-1.0.0.jar"]
+CMD ["java", "-jar", "/opt/app/entso-e-integration-1.0.0.jar"]
