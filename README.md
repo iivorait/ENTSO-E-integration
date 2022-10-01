@@ -20,7 +20,7 @@ Use Maven or a Docker platform (Docker/Podman/OpenShift/etc) to build and run, o
 Run with Maven: mvn spring-boot:run
 Build a fat JAR with Maven: mvn clean package [-DskipTests]
 Run a fat JAR: java -jar target/entso-e-integration-1.0.0.jar
-Build with Docker: docker build -t entso-e-integration
+Build with Docker: docker build -t entso-e-integration .
 Run with Docker: docker run --name entso-e-integration -p 8080:8080 entso-e-integration
 ```
 
