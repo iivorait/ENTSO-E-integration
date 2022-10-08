@@ -16,6 +16,12 @@ public class TimeSeries implements Serializable {
 	
 	@XmlElement(namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:0" )
 	private Period Period;
+	
+	@XmlElement(name="currency_Unit.name", namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:0" )
+	private String currency;
+	
+	@XmlElement(name="price_Measure_Unit.name", namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:0" )
+	private String measureUnit;
 
 	public String getmRID() {
 		return mRID;
@@ -32,4 +38,21 @@ public class TimeSeries implements Serializable {
 	public void setPeriod(Period period) {
 		Period = period;
 	}
+
+	public String getCurrency() {
+		return currency;
+	}
+
+	public void setCurrency(String currency) {
+		this.currency = currency;
+	}
+
+	public String getMeasureUnit() {
+		return measureUnit;
+	}
+
+	public void setMeasureUnit(String measureUnit) {
+		this.measureUnit = measureUnit;
+	}
+	
 }
