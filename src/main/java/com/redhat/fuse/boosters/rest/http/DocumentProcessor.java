@@ -19,13 +19,12 @@ public class DocumentProcessor implements Processor {
 		int time = exchange.getIn().getHeader("currentTime", int.class);
 		//The TimeSeries periods are from 22 to 22 of the next day (not from 0 to 24), 
 		//so the index of the current time in the array is the current time + 2, except for the 22 and 23 (0 and 1 respectively) 
+		//TODO: the time series are in fact tied to some other timezone, so this needs to be recoded
 		int timeIndex;
-		if(time == 22) {
+		if(time == 23) {
 			timeIndex = 0;
-		} else if(time == 23) {
-			timeIndex = 1;
 		} else {
-			timeIndex = time + 2;
+			timeIndex = time + 1;
 		}
 		Point valid = document.getTimeSeries().get(0).getPeriod().getPoint().get(timeIndex);
 		exchange.getIn().setBody(valid.getPriceAmount());
