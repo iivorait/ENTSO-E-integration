@@ -17,7 +17,7 @@ Tested with Java 11
 Use Maven or a Docker platform (Docker/Podman/OpenShift/etc) to build and run, or use a prebuilt Docker image from https://github.com/iivorait/ENTSO-E-integration/pkgs/container/entso-e-integration
 
 ```
-Run with Maven: mvn spring-boot:run
+Run with Maven: mvn spring-boot:run OR ./mvnw clean spring-boot:run
 Build a fat JAR with Maven: mvn clean package [-DskipTests]
 Run a fat JAR: java -jar target/entso-e-integration-1.0.0.jar
 Build with Docker: docker build -t entso-e-integration .

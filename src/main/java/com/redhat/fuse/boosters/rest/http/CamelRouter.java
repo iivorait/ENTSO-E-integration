@@ -114,7 +114,7 @@ public class CamelRouter extends RouteBuilder {
 	    	;
 	    
 	    from("direct:parseCurrentPrice")
-		    .setHeader("currentTime", simple("${date-with-timezone:now:UTC:HH}"))
+		    .setHeader("currentTime", simple("${date-with-timezone:now:UTC:yyyy-MM-dd'T'HH:mmZ}"))
 		    .process(new DocumentProcessor())
 		    .setHeader(Exchange.CONTENT_TYPE, constant(MediaType.TEXT_PLAIN))
 //		    .log("Result ${body}")
