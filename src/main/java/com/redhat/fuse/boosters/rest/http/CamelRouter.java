@@ -34,6 +34,13 @@ public class CamelRouter extends RouteBuilder {
             .component("servlet")
             .contextPath("/")
             ;
+
+		onException(Exception.class)
+			.handled(true)
+			.log("Serving from cache - Error caught: ${exception.message}")
+			.setProperty("errorMessage", constant("General error, check the logs"))
+			.to("direct:serveFromCache")
+			;
         
         //4.2.10. Day Ahead Prices [12.1.D]
         rest("/dap").description("Day Ahead Prices [12.1.D]")
@@ -93,7 +100,9 @@ public class CamelRouter extends RouteBuilder {
 //		    	.log("API response: ${body}")
 		    	.to("direct:parseXML")
 	    	.onFallback()
-	    		.transform().constant("Error with ENTSO-E API")
+				.log("Error caught while connecting to ENTSO-E API: ${exception.message}")
+				.setProperty("errorMessage", constant("Error with ENTSO-E API"))
+				.to("direct:serveFromCache")
 	    	.end()
 	        ;  
 	    
@@ -116,12 +125,14 @@ public class CamelRouter extends RouteBuilder {
 	    from("direct:parseCurrentPrice")
 		    .setHeader("currentTime", simple("${date-with-timezone:now:UTC:yyyy-MM-dd'T'HH:mmZ}"))
 		    .process(new DocumentProcessor())
+			.wireTap("direct:saveCache")
 		    .setHeader(Exchange.CONTENT_TYPE, constant(MediaType.TEXT_PLAIN))
 //		    .log("Result ${body}")
 	        ;  
 	    
 	    from("direct:parsePriceList")
 		    .process(new PriceListProcessor())
+			.wireTap("direct:saveCache")
 		    .setHeader(Exchange.CONTENT_TYPE, constant(MediaType.APPLICATION_JSON))
 	    	.marshal().json(JsonLibrary.Jackson)
 	        ;  
