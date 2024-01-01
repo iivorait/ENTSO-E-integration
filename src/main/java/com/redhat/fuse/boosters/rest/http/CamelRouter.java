@@ -94,7 +94,7 @@ public class CamelRouter extends RouteBuilder {
 	    			.metricsRollingPercentileWindowInMilliseconds(60000)
 	    			.circuitBreakerSleepWindowInMilliseconds(60000)
 	    		.end()
-	    		.toD("https4://{{entsoe.endpoint}}?securityToken={{entsoe.securityToken}}&documentType=A44&in_Domain=${headers.areacode}&out_Domain=${headers.areacode}&periodStart=${date-with-timezone:now:UTC:yyyyMMddHH}00&periodEnd=${date-with-timezone:now:UTC:yyyyMMddHH}00")
+	    		.toD("https4://{{entsoe.endpoint}}?securityToken={{entsoe.securityToken}}&documentType=A44&in_Domain=${headers.areacode}&out_Domain=${headers.areacode}&periodStart=${date-with-timezone:now:UTC:yyyyMMdd}1200&periodEnd=${date-with-timezone:now:UTC:yyyyMMdd}1200")
 	    		.setProperty("responseXML", simple("${bodyAs(String)}")) //Allow the body to be read multiple times
 		    	.setBody(simple("${property.responseXML}"))
 //		    	.log("API response: ${body}")
