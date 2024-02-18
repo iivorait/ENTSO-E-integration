@@ -56,6 +56,7 @@ public class PriceListProcessor implements Processor {
             prices.add(price);
 		}
 		pricelist.setPrices(prices);
+		pricelist.calculateMedianPrice();
 		
 		exchange.getIn().setBody(pricelist);
 	}

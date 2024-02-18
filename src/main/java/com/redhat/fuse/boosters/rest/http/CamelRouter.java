@@ -1,5 +1,8 @@
 package com.redhat.fuse.boosters.rest.http;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 import javax.xml.bind.JAXBContext;
 
 import org.apache.camel.Exchange;
@@ -38,8 +41,14 @@ public class CamelRouter extends RouteBuilder {
 		onException(Exception.class)
 			.handled(true)
 			.log("Serving from cache - Error caught: ${exception.message}")
-			.setProperty("errorMessage", constant("General error, check the logs"))
-			.to("direct:serveFromCache")
+			.to("direct:checkCache")
+			.setBody(simple("${property.responseXML}"))
+			.choice()
+	    		.when(simple("${property.list} == 'list'"))
+	    			.to("direct:parsePriceList")
+	    		.otherwise()
+	    			.to("direct:parseCurrentPrice")
+	    	.endChoice()
 			;
         
         //4.2.10. Day Ahead Prices [12.1.D]
@@ -82,57 +91,60 @@ public class CamelRouter extends RouteBuilder {
 	    	.to("direct:callAPI")
 	    ;
         
+		JAXBContext con = JAXBContext.newInstance(Publication_MarketDocument.class);
+	    JaxbDataFormat jaxbDataFormat = new JaxbDataFormat(con);
 	    from("direct:callAPI")
 	    	.routeId("callAPI")
 	    	.removeHeader(Exchange.HTTP_URI) //These headers are shared with the REST component and will interfere with HTTP4
 	    	.removeHeader(Exchange.HTTP_PATH)
 	    	.removeHeader(Exchange.HTTP_QUERY)
-	    	.hystrix()
-	    		.hystrixConfiguration()
-	    			.executionTimeoutInMilliseconds(30000)
-	    			.circuitBreakerRequestVolumeThreshold(10)
-	    			.metricsRollingPercentileWindowInMilliseconds(60000)
-	    			.circuitBreakerSleepWindowInMilliseconds(60000)
-	    		.end()
-	    		.toD("https4://{{entsoe.endpoint}}?securityToken={{entsoe.securityToken}}&documentType=A44&in_Domain=${headers.areacode}&out_Domain=${headers.areacode}&periodStart=${date-with-timezone:now:UTC:yyyyMMdd}1200&periodEnd=${date-with-timezone:now:UTC:yyyyMMdd}1200")
-	    		.setProperty("responseXML", simple("${bodyAs(String)}")) //Allow the body to be read multiple times
-		    	.setBody(simple("${property.responseXML}"))
-//		    	.log("API response: ${body}")
-		    	.to("direct:parseXML")
-	    	.onFallback()
-				.log("Error caught while connecting to ENTSO-E API: ${exception.message}")
-				.setProperty("errorMessage", constant("Error with ENTSO-E API"))
-				.to("direct:serveFromCache")
-	    	.end()
-	        ;  
-	    
-	    
-	    JAXBContext con = JAXBContext.newInstance(Publication_MarketDocument.class);
-	    JaxbDataFormat jaxbDataFormat = new JaxbDataFormat(con);
-	    from("direct:parseXML")
-	    	.routeId("parseXML")
-//		    .log("Before ${body}") 
-	    	.unmarshal(jaxbDataFormat)
-//	    	.log("After ${body}")
-	    	.choice()
+
+			.to("direct:checkCache")
+			//TODO: cleanup ugly copy-paste code here, I'm tired now
+			.choice()
+	    		.when(simple("${property.fetchToday} == 'true'")) //cache empty
+					.log("Fetching new prices for today")
+					.toD("https4://{{entsoe.endpoint}}?securityToken={{entsoe.securityToken}}&documentType=A44&in_Domain=${headers.areacode}&out_Domain=${headers.areacode}&periodStart=${date-with-timezone:now:UTC:yyyyMMdd}1200&periodEnd=${date-with-timezone:now:UTC:yyyyMMdd}1200")
+					.setProperty("responseXML", simple("${bodyAs(String)}")) //Allow the body to be read multiple times
+					.setBody(simple("${property.responseXML}"))
+					//		    .log("Before ${body}") 
+					.unmarshal(jaxbDataFormat)
+					//	    	.log("After ${body}")
+					.to("direct:saveCache")
+		 		.when(simple("${property.fetchTomorrow} == 'true'")) //cache found for today
+					.log("Fetching new prices for tomorrow")
+					.process(exchange -> { //now+24h does not work for some reason
+						LocalDate tomorrow = LocalDate.now().plusDays(1);
+						DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+						exchange.setProperty("tomorrowDate", tomorrow.format(formatter));
+					})
+					.toD("https4://{{entsoe.endpoint}}?securityToken={{entsoe.securityToken}}&documentType=A44&in_Domain=${headers.areacode}&out_Domain=${headers.areacode}&periodStart=${property.tomorrowDate}1200&periodEnd=${property.tomorrowDate}1200")
+	    			.setProperty("responseXML", simple("${bodyAs(String)}")) //Allow the body to be read multiple times
+					.setBody(simple("${property.responseXML}"))
+					.unmarshal(jaxbDataFormat)
+					.to("direct:saveCache")
+					.to("direct:checkCache") //read todays prices into memory
+				.otherwise() //cache found for today and tomorrow
+					.log("Using cached prices")
+			.end()
+			.setBody(simple("${property.responseXML}"))
+			.choice()
 	    		.when(simple("${property.list} == 'list'"))
 	    			.to("direct:parsePriceList")
 	    		.otherwise()
 	    			.to("direct:parseCurrentPrice")
 	    	.endChoice()
-	    	;
+	        ;  
 	    
 	    from("direct:parseCurrentPrice")
 		    .setHeader("currentTime", simple("${date-with-timezone:now:UTC:yyyy-MM-dd'T'HH:mmZ}"))
 		    .process(new DocumentProcessor())
-			.wireTap("direct:saveCache")
 		    .setHeader(Exchange.CONTENT_TYPE, constant(MediaType.TEXT_PLAIN))
 //		    .log("Result ${body}")
 	        ;  
 	    
 	    from("direct:parsePriceList")
 		    .process(new PriceListProcessor())
-			.wireTap("direct:saveCache")
 		    .setHeader(Exchange.CONTENT_TYPE, constant(MediaType.APPLICATION_JSON))
 	    	.marshal().json(JsonLibrary.Jackson)
 	        ;  
