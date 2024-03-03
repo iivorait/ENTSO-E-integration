@@ -100,11 +100,18 @@ public class CamelRouter extends RouteBuilder {
 	    	.removeHeader(Exchange.HTTP_QUERY)
 
 			.to("direct:checkCache")
+			.process(exchange -> { //now+24h does not work for some reason
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+				LocalDate tomorrow = LocalDate.now().plusDays(1);
+				exchange.setProperty("tomorrowDate", tomorrow.format(formatter));
+				//LocalDate dayAfterTomorrow = LocalDate.now().plusDays(2);
+				//exchange.setProperty("dayAfterTomorrowDate", dayAfterTomorrow.format(formatter));
+			})
 			//TODO: cleanup ugly copy-paste code here, I'm tired now
 			.choice()
 	    		.when(simple("${property.fetchToday} == 'true'")) //cache empty
 					.log("Fetching new prices for today")
-					.toD("https4://{{entsoe.endpoint}}?securityToken={{entsoe.securityToken}}&documentType=A44&in_Domain=${headers.areacode}&out_Domain=${headers.areacode}&periodStart=${date-with-timezone:now:UTC:yyyyMMdd}1200&periodEnd=${date-with-timezone:now:UTC:yyyyMMdd}1200")
+					.toD("https4://{{entsoe.endpoint}}?securityToken={{entsoe.securityToken}}&documentType=A44&in_Domain=${headers.areacode}&out_Domain=${headers.areacode}&periodStart=${date-with-timezone:now:UTC:yyyyMMddHH}00&periodEnd=${property.tomorrowDate}1200")
 					.setProperty("responseXML", simple("${bodyAs(String)}")) //Allow the body to be read multiple times
 					.setBody(simple("${property.responseXML}"))
 					//		    .log("Before ${body}") 
@@ -113,11 +120,6 @@ public class CamelRouter extends RouteBuilder {
 					.to("direct:saveCache")
 		 		.when(simple("${property.fetchTomorrow} == 'true'")) //cache found for today
 					.log("Fetching new prices for tomorrow")
-					.process(exchange -> { //now+24h does not work for some reason
-						LocalDate tomorrow = LocalDate.now().plusDays(1);
-						DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-						exchange.setProperty("tomorrowDate", tomorrow.format(formatter));
-					})
 					.toD("https4://{{entsoe.endpoint}}?securityToken={{entsoe.securityToken}}&documentType=A44&in_Domain=${headers.areacode}&out_Domain=${headers.areacode}&periodStart=${property.tomorrowDate}1200&periodEnd=${property.tomorrowDate}1200")
 	    			.setProperty("responseXML", simple("${bodyAs(String)}")) //Allow the body to be read multiple times
 					.setBody(simple("${property.responseXML}"))

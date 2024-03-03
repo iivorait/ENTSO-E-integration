@@ -44,6 +44,9 @@ public class DocumentProcessor implements Processor {
 		long diffInMillies = Math.abs(startDate.getTime() - currentDate.getTime());
 		long diff = TimeUnit.MINUTES.convert(diffInMillies, TimeUnit.MILLISECONDS);
 		int timeIndex = Math.floorDiv((int) diff, resolution);
+		if(timeIndex == 24) {
+			timeIndex = 0;
+		}
 
 		Point valid = period.getPoint().get(timeIndex);
 		exchange.getIn().setBody(valid.getPriceAmount());
