@@ -27,7 +27,7 @@ public class CacheRouter extends RouteBuilder {
 			.routeId("checkCache")
 			.setProperty("fetchToday", simple("true"))
 			.setProperty("fetchTomorrow", simple("true"))
-			.setProperty("currentTime", simple("${date-with-timezone:now:UTC:yyyyMMddhh}0000"))
+			.setProperty("currentTime", simple("${date-with-timezone:now:UTC:yyyyMMddHHmmss}"))
 			.process(exchange -> {
 
 				String directoryPath = exchange.getContext().resolvePropertyPlaceholders("{{cache.directory}}");
