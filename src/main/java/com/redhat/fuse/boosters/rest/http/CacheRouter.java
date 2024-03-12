@@ -15,7 +15,6 @@ import com.redhat.fuse.boosters.rest.models.PriceList;
 
 /**
  * Save and read prices from cache
- * The ENTSO-E API is unavailable around midnight (UTC), so the next day's prices need to be cached beforehand
  */
 @Component
 public class CacheRouter extends RouteBuilder {
@@ -26,8 +25,9 @@ public class CacheRouter extends RouteBuilder {
 		from("direct:checkCache")
 			.routeId("checkCache")
 			.setProperty("fetchToday", simple("true"))
-			.setProperty("fetchTomorrow", simple("true"))
-			.setProperty("currentTime", simple("${date-with-timezone:now:UTC:yyyyMMddHHmmss}"))
+			//the hard coded hour and minute need to change to HHss when moving to 15min resolution here
+			//and the property.lastPriceTime needs to add the resolution to the timestamp for the cache to work correctly
+			.setProperty("currentTime", simple("${date-with-timezone:now:UTC:yyyyMMddHH}0000"))
 			.process(exchange -> {
 
 				String directoryPath = exchange.getContext().resolvePropertyPlaceholders("{{cache.directory}}");
@@ -48,8 +48,8 @@ public class CacheRouter extends RouteBuilder {
 								try {
 									Long filename = Long.parseLong(file.getName().replaceAll("[^0-9]", ""));
 									// Check if the filename meets the condition
+									//System.out.println("Found file: " + file.getName() + " and current time is " + currentTime);
 									if (filename >= currentTime) {
-										//System.out.println("Found file: " + file.getName());
 										validCacheFiles.add(file.getPath());
 									} 
 								} catch (NumberFormatException e) {
@@ -64,10 +64,6 @@ public class CacheRouter extends RouteBuilder {
 						exchange.setProperty("responseXML", fileContent);
 						exchange.setProperty("fetchToday", false);
 					}
-					if(validCacheFiles.size() >= 2) { //tomorrow's prices already loaded
-						exchange.setProperty("fetchTomorrow", false);
-					}
-					
 				} else {
 					System.out.println("Directory does not exist or is not a directory.");
 				}

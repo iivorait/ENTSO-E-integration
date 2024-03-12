@@ -104,10 +104,7 @@ public class CamelRouter extends RouteBuilder {
 				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 				LocalDate tomorrow = LocalDate.now().plusDays(1);
 				exchange.setProperty("tomorrowDate", tomorrow.format(formatter));
-				//LocalDate dayAfterTomorrow = LocalDate.now().plusDays(2);
-				//exchange.setProperty("dayAfterTomorrowDate", dayAfterTomorrow.format(formatter));
 			})
-			//TODO: cleanup ugly copy-paste code here, I'm tired now
 			.choice()
 	    		.when(simple("${property.fetchToday} == 'true'")) //cache empty
 					.log("Fetching new prices for today")
@@ -118,15 +115,7 @@ public class CamelRouter extends RouteBuilder {
 					.unmarshal(jaxbDataFormat)
 					//	    	.log("After ${body}")
 					.to("direct:saveCache")
-		 		/*.when(simple("${property.fetchTomorrow} == 'true'")) //cache found for today
-					.log("Fetching new prices for tomorrow")
-					.toD("https4://{{entsoe.endpoint}}?securityToken={{entsoe.securityToken}}&documentType=A44&in_Domain=${headers.areacode}&out_Domain=${headers.areacode}&periodStart=${property.tomorrowDate}1200&periodEnd=${property.tomorrowDate}1200")
-	    			.setProperty("responseXML", simple("${bodyAs(String)}")) //Allow the body to be read multiple times
-					.setBody(simple("${property.responseXML}"))
-					.unmarshal(jaxbDataFormat)
-					.to("direct:saveCache")
-					.to("direct:checkCache") //read todays prices into memory */
-				.otherwise() //cache found for today and tomorrow
+				.otherwise() //cache found
 					.log("Using cached prices")
 			.end()
 			.setBody(simple("${property.responseXML}"))
