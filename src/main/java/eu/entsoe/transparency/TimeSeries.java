@@ -11,16 +11,16 @@ public class TimeSeries implements Serializable {
 
 	private static final long serialVersionUID = -7377037043746052761L;
 
-	@XmlElement(namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:0" )
+	@XmlElement(namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:3" )
 	private String mRID;
 	
-	@XmlElement(namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:0" )
+	@XmlElement(namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:3" )
 	private Period Period;
 	
-	@XmlElement(name="currency_Unit.name", namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:0" )
+	@XmlElement(name="currency_Unit.name", namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:3" )
 	private String currency;
 	
-	@XmlElement(name="price_Measure_Unit.name", namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:0" )
+	@XmlElement(name="price_Measure_Unit.name", namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:3" )
 	private String measureUnit;
 
 	public String getmRID() {

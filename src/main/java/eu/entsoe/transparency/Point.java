@@ -11,10 +11,10 @@ public class Point implements Serializable {
 
 	private static final long serialVersionUID = 8964515245746898666L;
 	
-	@XmlElement(namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:0" )
+	@XmlElement(namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:3" )
 	private int position;
 	
-	@XmlElement(name="price.amount", namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:0" )
+	@XmlElement(name="price.amount", namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:3" )
 	private float priceAmount;
 
 	public int getPosition() {

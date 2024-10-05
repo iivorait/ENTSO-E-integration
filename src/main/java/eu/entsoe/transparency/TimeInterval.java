@@ -12,10 +12,10 @@ public class TimeInterval implements Serializable {
 
 	private static final long serialVersionUID = 6800802536378441880L;
 	
-	@XmlElement(namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:0" )
+	@XmlElement(namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:3" )
 	private String start;
 	
-	@XmlElement(namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:0" )
+	@XmlElement(namespace = "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:3" )
 	private String end;
 
 	public String getStart() {
