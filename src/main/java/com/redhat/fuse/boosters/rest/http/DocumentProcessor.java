@@ -9,6 +9,8 @@ import org.apache.camel.Processor;
 import eu.entsoe.transparency.Period;
 import eu.entsoe.transparency.Point;
 import eu.entsoe.transparency.Publication_MarketDocument;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Get the currently valid price from the MarketDocument
