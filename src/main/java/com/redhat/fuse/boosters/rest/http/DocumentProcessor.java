@@ -48,7 +48,22 @@ public class DocumentProcessor implements Processor {
 			timeIndex = 0;
 		}
 
-		Point valid = period.getPoint().get(timeIndex);
+		//sequential equal prices won't get their own points - there is a gap in the position value
+                Iterator<Point> points = document.getTimeSeries().get(0).getPeriod().getPoint().iterator();
+                ArrayList<Point> noGapsInPoints = new ArrayList<>();
+                int position = 1;
+                Point previousPoint = null;
+                while(points.hasNext()) {
+                    Point point = points.next();
+                    while(position < point.getPosition()) {
+                        position++;
+                        noGapsInPoints.add(previousPoint);
+                    }
+                    previousPoint = point;
+                }
+                noGapsInPoints.add(previousPoint);
+                
+		Point valid = noGapsInPoints.get(timeIndex);
 		exchange.getIn().setBody(valid.getPriceAmount());
 	}
 
