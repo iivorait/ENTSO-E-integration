@@ -45,8 +45,21 @@ public class PriceListProcessor implements Processor {
 		ArrayList<PricePoint> prices = new ArrayList<>();
 		Iterator<Point> points = document.getTimeSeries().get(0).getPeriod().getPoint().iterator();
 		
-		while(points.hasNext()) {
-			Point point = points.next();
+		//sequential equal prices won't get their own points - there is a gap in the position value
+                ArrayList<Point> noGapsInPoints = new ArrayList<>();
+                int position = 1;
+                Point previousPoint = null;
+                while(points.hasNext()) {
+                    Point point = points.next();
+                    while(position < point.getPosition()) {
+                        position++;
+                        noGapsInPoints.add(previousPoint);
+                    }
+                    previousPoint = point;
+                }
+                noGapsInPoints.add(previousPoint);
+                
+                for (Point point : noGapsInPoints) {
 			PricePoint price = new PricePoint();
 			price.setPrice(point.getPriceAmount());
 			price.setStartLocal(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZZZ").format(startLocal));
