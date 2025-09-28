@@ -39,32 +39,32 @@ public class DocumentProcessor implements Processor {
 		 */
 
 		//Calculate the index (starting from 0) of the Point that is currently valid
-		int resolution = Integer.parseInt(period.getResolution(), 2, 4, 10); //60 or 15 minutes
+		int resolution = Integer.parseInt(period.getResolution(), 2, 4, 10); // 60 or 15 minutes
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmX", Locale.ENGLISH);
 		Date currentDate = sdf.parse(currentTime);
 		Date startDate = sdf.parse(period.getTimeInterval().getStart());
 		long diffInMillies = Math.abs(startDate.getTime() - currentDate.getTime());
 		long diff = TimeUnit.MINUTES.convert(diffInMillies, TimeUnit.MILLISECONDS);
 		int timeIndex = Math.floorDiv((int) diff, resolution);
-		if(timeIndex == 24) {
+		if ((resolution == 60 && timeIndex == 24) || (resolution == 15 && timeIndex == 96)) {
 			timeIndex = 0;
 		}
 
-		//sequential equal prices won't get their own points - there is a gap in the position value
-                Iterator<Point> points = document.getTimeSeries().get(0).getPeriod().getPoint().iterator();
-                ArrayList<Point> noGapsInPoints = new ArrayList<>();
-                int position = 1;
-                Point previousPoint = null;
-                while(points.hasNext()) {
-                    Point point = points.next();
-                    while(position < point.getPosition()) {
-                        position++;
-                        noGapsInPoints.add(previousPoint);
-                    }
-                    previousPoint = point;
-                }
-                noGapsInPoints.add(previousPoint);
-                
+		// sequential equal prices won't get their own points - there is a gap in the position value
+		Iterator<Point> points = document.getTimeSeries().get(0).getPeriod().getPoint().iterator();
+		ArrayList<Point> noGapsInPoints = new ArrayList<>();
+		int position = 1;
+		Point previousPoint = null;
+		while (points.hasNext()) {
+			Point point = points.next();
+			while (position < point.getPosition()) {
+				position++;
+				noGapsInPoints.add(previousPoint);
+			}
+			previousPoint = point;
+		}
+		noGapsInPoints.add(previousPoint);
+
 		Point valid = noGapsInPoints.get(timeIndex);
 		exchange.getIn().setBody(valid.getPriceAmount());
 	}

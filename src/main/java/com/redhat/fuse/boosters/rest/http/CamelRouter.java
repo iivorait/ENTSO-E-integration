@@ -99,14 +99,14 @@ public class CamelRouter extends RouteBuilder {
 	    	.removeHeader(Exchange.HTTP_PATH)
 	    	.removeHeader(Exchange.HTTP_QUERY)
 
-			.to("direct:checkCache")
+			//.to("direct:checkCache")
 			.process(exchange -> { //now+24h does not work for some reason
 				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 				LocalDate tomorrow = LocalDate.now().plusDays(1);
 				exchange.setProperty("tomorrowDate", tomorrow.format(formatter));
 			})
-			.choice()
-	    		.when(simple("${property.fetchToday} == 'true'")) //cache empty
+			//.choice()
+	    		//.when(simple("${property.fetchToday} == 'true'")) //cache empty
 					.log("Fetching new prices for today")
 					.toD("https4://{{entsoe.endpoint}}?securityToken={{entsoe.securityToken}}&documentType=A44&in_Domain=${headers.areacode}&out_Domain=${headers.areacode}&periodStart=${date-with-timezone:now:UTC:yyyyMMddHH}00&periodEnd=${property.tomorrowDate}1200")
 					.setProperty("responseXML", simple("${bodyAs(String)}")) //Allow the body to be read multiple times
@@ -114,10 +114,10 @@ public class CamelRouter extends RouteBuilder {
 					//		    .log("Before ${body}") 
 					.unmarshal(jaxbDataFormat)
 					//	    	.log("After ${body}")
-					.to("direct:saveCache")
-				.otherwise() //cache found
-					.log("Using cached prices")
-			.end()
+					//.to("direct:saveCache")
+				//.otherwise() //cache found
+					//.log("Using cached prices")
+			//.end()
 			.setBody(simple("${property.responseXML}"))
 			.choice()
 	    		.when(simple("${property.list} == 'list'"))
